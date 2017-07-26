@@ -1,119 +1,136 @@
-/* Zepto plugin : slide transition v1.0 */
-(function ($) {
+/* Zepto plugin : slide transition v1.1
+Modified / fixed version of
+https://github.com/NinjaBCN/zepto-slide-transition
+*/
+/* global Zepto */
+(function(factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(['zepto'], factory);
+    } else {
+        factory(Zepto);
+    }
+}(function($) {
+    var slide = function(direction) {
+        return function(duration, callback) {
+            var callback = $.isFunction(duration) ? duration : $.isFunction(callback) ? callback : undefined,
+                duration = $.isNumeric(duration) ? duration : undefined;
 
-    /* SlideDown */
-    $.fn.slideDown = function (duration) {    
-    
-        // get the element position to restore it then
-        var position = this.css('position');
-        
-        // show element if it is hidden
-        this.show();
-        
-        // place it so it displays as usually but hidden
-        this.css({
-            position: 'absolute',
-            visibility: 'hidden'
-        });
-        
-        // get naturally height, margin, padding
-        var marginTop = this.css('margin-top');
-        var marginBottom = this.css('margin-bottom');
-        var paddingTop = this.css('padding-top');
-        var paddingBottom = this.css('padding-bottom');
-        var height = this.css('height');
-        
-        // set initial css for animation
-        this.css({
-            position: position,
-            visibility: 'visible',
-            overflow: 'hidden',
-            height: 0,
-            marginTop: 0,
-            marginBottom: 0,
-            paddingTop: 0,
-            paddingBottom: 0
-        });
-        
-        // animate to gotten height, margin and padding
-        this.animate({
-            height: height,
-            marginTop: marginTop,
-            marginBottom: marginBottom,
-            paddingTop: paddingTop,
-            paddingBottom: paddingBottom
-        }, duration);
-        
-    };
+            this.each(function() {
+                var target = $(this),
+                    position = target.css('position'),
+                    parentStyle;
 
-    /* SlideUp */
-    $.fn.slideUp = function (duration) {
-    
-        // active the function only if the element is visible
-        if (this.height() > 0) {
-        
-            var target = this;
-            
-            // get the element position to restore it then
-            var position = target.css('position');
-            
-            // get the element height, margin and padding to restore them then
-            var height = target.css('height');
-            var marginTop = target.css('margin-top');
-            var marginBottom = target.css('margin-bottom');
-            var paddingTop = target.css('padding-top');
-            var paddingBottom = target.css('padding-bottom');
-            
-            // set initial css for animation
-            this.css({
-                visibility: 'visible',
-                overflow: 'hidden',
-                height: height,
-                marginTop: marginTop,
-                marginBottom: marginBottom,
-                paddingTop: paddingTop,
-                paddingBottom: paddingBottom
-            });
-            
-            // animate element height, margin and padding to zero
-            target.animate({
-                height: 0,
-                marginTop: 0,
-                marginBottom: 0,
-                paddingTop: 0,
-                paddingBottom: 0
-                },
-                { 
-                // callback : restore the element position, height, margin and padding to original values
-                duration: duration,
-                queue: false,
-                complete: function(){
-                    target.hide();
+                if (target.height() === 0 && direction === 'up') {
+                    return;
+                }
+
+                // Only for slideDown
+                // Prepare element and parent element to get right position and css properties
+                if (direction === 'down') {
+                    parentStyle = target.parent().attr('style');
+                    // show element if it is hidden
+                    target.show();
+                    // place it so it displays as usually but hidden
+                    target.parent().css({
+                        position: 'relative'
+                    });
                     target.css({
-                    visibility: 'visible',
-                    overflow: 'hidden',
-                    height: height,
-                    marginTop: marginTop,
-                    marginBottom: marginBottom,
-                    paddingTop: paddingTop,
-                    paddingBottom: paddingBottom
-                });
-            }
-            });
-        }
-    };
-    
-    /* SlideToggle */
-    $.fn.slideToggle = function (duration) {
-    
-        // if the element is hidden, slideDown !
-        if (this.height() == 0) {
-            this.slideDown();
-        } 
-        // if the element is visible, slideUp !
-        else {
-            this.slideUp();
-        }
+                        position: 'absolute',
+                        visibility: 'hidden'
+                    });
+                } // End only for slideDown
+
+                var height = target.height(),
+                    marginTop = target.css('margin-top'),
+                    marginBottom = target.css('margin-bottom'),
+                    paddingTop = target.css('padding-top'),
+                    paddingBottom = target.css('padding-bottom');
+
+                if (direction === 'down') {
+                    // All slideDown specific actions
+
+                    target.parent().attr('style', parentStyle);
+
+                    // set initial css for animation
+                    target.css({
+                        position: position,
+                        visibility: 'visible',
+                        overflow: 'hidden',
+                        height: 0,
+                        marginTop: 0,
+                        marginBottom: 0,
+                        paddingTop: 0,
+                        paddingBottom: 0
+                    });
+
+                    // animate to gotten height, margin and padding
+                    target.animate({
+                        height: height,
+                        marginTop: marginTop,
+                        marginBottom: marginBottom,
+                        paddingTop: paddingTop,
+                        paddingBottom: paddingBottom
+                    }, {
+                        duration: duration,
+                        complete: function() {
+                            target.attr('style', '');
+                            target.show();
+                            callback && callback.call(target);
+                        }
+                    });
+                    // End all slideDown specific actions
+                } else {
+                    // All slideUp specific actions
+
+                    // set initial css for animation
+                    target.css({
+                        display: 'block',
+                        visibility: 'visible',
+                        overflow: 'hidden',
+                        height: height,
+                        marginTop: marginTop,
+                        marginBottom: marginBottom,
+                        paddingTop: paddingTop,
+                        paddingBottom: paddingBottom
+                    });
+
+                    // animate element height, margin and padding to zero
+                    target.animate({
+                        height: 0,
+                        marginTop: 0,
+                        marginBottom: 0,
+                        paddingTop: 0,
+                        paddingBottom: 0
+                    }, {
+                        duration: duration,
+                        queue: false,
+                        // callback : restore defaults but hide
+                        complete: function() {
+                            target.attr('style', '');
+                            target.hide();
+                            callback && callback.call(target);
+                        }
+                    });
+                    // End all slideUp specific actions
+                }
+            }); // End each
+        };
     };
 
-})(Zepto);
+    ['up', 'down'].forEach(function(direction) {
+        var fnName = direction.substr(0, 1).toUpperCase() + direction.substr(1);
+
+        $.fn['slide' + fnName] = slide(direction);
+    });
+
+    /* SlideToggle */
+    $.fn.slideToggle = function(duration, callback) {
+        if (this.height() === 0) {
+        // If the element is hidden, slideDown!
+            this.slideDown(duration, callback);
+        } else {
+        // If the element is visible, slideUp!
+            this.slideUp(duration, callback);
+        }
+    };
+}));
