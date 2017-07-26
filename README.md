@@ -1,10 +1,19 @@
-Zepto Slide Transition
+Zepto Slide Transition+
 ======================
 
 The Zepto Slide Transition plugin add to Zepto.js the functions bellow :
 - slideDown();
 - slideUp();
 - slideToggle();
+
+# Additional Features and Fixed Bugs
+- Multiple element support
+- Call back function support
+- Bugs fixed
+  - Height calculation issue
+  - Missing arguments for slideToggle
+  - Restore of original styles
+  - Issue calculating correct size when parent element doesn't have position relative
 
 # Requirement
 
